@@ -1,0 +1,60 @@
+﻿///
+/// Code By Ahmaderfani12, Edited by Kieran Coppins
+/// GitHub: https://github.com/ahmaderfani12/PointClouds
+/// 
+
+#pragma kernel CSMain
+
+RWStructuredBuffer<float3> _Positions;
+RWStructuredBuffer<float3> _PositionsTemp;//real pos
+RWStructuredBuffer<int> _Visited; // Stores visited nodes
+
+float3 _viewportPos;    //Stores position of our object
+float3 _viewportSize;    //Stores viewport scale
+float3 _transformScale; //Stores the scale of the transform
+
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float3 _ScaledPos = _PositionsTemp[id.x] * _transformScale;
+
+
+
+    if (_Visited[id.x] == 1)
+    {
+        //This pixel has been visited make sure its inside the view port
+        if (_ScaledPos.x > _viewportPos.x - _viewportSize.x && _ScaledPos.x < _viewportPos.x + _viewportSize.x)
+        {
+            if (_ScaledPos.y > _viewportPos.y - _viewportSize.y && _ScaledPos.y < _viewportPos.y + _viewportSize.y)
+            {
+                if (_ScaledPos.z > _viewportPos.z - _viewportSize.z && _ScaledPos.z < _viewportPos.z + _viewportSize.z)
+                {
+                    _Positions[id.x] = _PositionsTemp[id.x];
+                }
+                else
+                {
+                    //Dont display
+                    _Positions[id.x] = float3(0, 0, 0);
+                }
+            }
+            else
+            {
+                //Dont display
+                _Positions[id.x] = float3(0, 0, 0);
+            }
+        }
+        else
+        {
+            //Dont display
+            _Positions[id.x] = float3(0, 0, 0);
+        }
+
+        //_Positions[id.x] = _PositionsTemp[id.x];
+    }
+    else
+    {
+        //Dont display
+        _Positions[id.x] = float3(0, 0, 0);
+    }
+}
